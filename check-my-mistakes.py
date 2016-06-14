@@ -1,6 +1,7 @@
 #!python3
 
 import clipboard
+import webbrowser
 
 import sys
 import os.path
@@ -58,6 +59,8 @@ def main ():
             clipboard.set(sRes)
         else:
             clipboard.set("No errors found.")
+    print(sRes)
 
 if __name__ == '__main__':
     main()
+    webbrowser.open('workflow://run-workflow?name=my-look')
