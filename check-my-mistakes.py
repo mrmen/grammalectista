@@ -29,21 +29,6 @@ def generateText (iParagraph, sText, oTokenizer, oDict, bJSON, nWidth=100, bDebu
     return "  " + json.dumps({ "iParagraph": iParagraph, "lGrammarErrors": aGrammErrs, "lSpellingErrors": aSpellErrs }, ensure_ascii=False)
 
 
-def readfile (spf):
-    if os.path.isfile(spf):
-        with open(spf, "r", encoding="utf-8") as hSrc:
-            for sText in hSrc:
-                yield sText
-    else:
-        print("# Error: file not found.")
-
-
-def output (sText, hDst=None):
-    if not hDst:
-        echo(sText, end="")
-    else:
-        hDst.write(sText)
-
 
 def main ():
     xParser = argparse.ArgumentParser()
@@ -57,48 +42,22 @@ def main ():
 
     gce.load()
     gce.setOptions({"html": True})
-    echo("Grammalecte v{}".format(gce.version))
     oDict = gce.getDictionary()
     oTokenizer = tkz.Tokenizer("fr")
     oLexGraphe = lxg.Lexicographe(oDict)
     if xArgs.textformatter or xArgs.textformatteronly:
         oTF = tf.TextFormatter()
 
-    sFile = xArgs.file or xArgs.file_to_file
-    if sFile:
-        # file processing
-        hDst = open(sFile[:sFile.rfind(".")]+".res.txt", "w", encoding="utf-8")  if xArgs.file_to_file or sys.platform == "win32"  else None
-        bComma = False
-        if xArgs.json:
-            output('{ "grammalecte": "'+gce.version+'", "lang": "'+gce.lang+'", "data" : [\n', hDst)
-        for i, sText in enumerate(readfile(sFile), 1):
-            if xArgs.textformatter or xArgs.textformatteronly:
-                sText = oTF.formatText(sText)
-            if xArgs.textformatteronly:
-                output(sText, hDst)
-            else:
-                sText = generateText(i, sText, oTokenizer, oDict, xArgs.json, nWidth=xArgs.width)
-                if sText:
-                    if xArgs.json and bComma:
-                        output(",\n", hDst)
-                    output(sText, hDst)
-                    bComma = True
-            if hDst:
-                echo("§ %d\r" % i, end="", flush=True)
-        if xArgs.json:
-            output("\n]}\n", hDst)
-    else:
-        # pseudo-console
-        sText = clipboard.get()
-        bDebug = False
-        for sParagraph in txt.getParagraph(sText):
-            if xArgs.textformatter:
-                sText = oTF.formatText(sText)
-            sRes = generateText(0, sText, oTokenizer, oDict, xArgs.json, nWidth=xArgs.width, bDebug=bDebug, bEmptyIfNoErrors=True)
-            if sRes:
-                clipboard.set(sRes)
-            else:
-                clipboard.set("No errors found.")
+    sText = clipboard.get()
+    bDebug = False
+    for sParagraph in txt.getParagraph(sText):
+        if xArgs.textformatter:
+            sText = oTF.formatText(sText)
+        sRes = generateText(0, sText, oTokenizer, oDict, xArgs.json, nWidth=xArgs.width, bDebug=bDebug, bEmptyIfNoErrors=True)
+        if sRes:
+            clipboard.set(sRes)
+        else:
+            clipboard.set("No errors found.")
 
 if __name__ == '__main__':
     main()
